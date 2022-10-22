@@ -19,17 +19,13 @@
 #define SD_CARD_DI D11
 #define SPEAKER_PIN 9
 
-// // action names
-// #define TWIST_IT (0)
-// #define PUSH_IT (1)
-// #define SHAKE_IT (2)
-
 // libraries
 #include <SPI.h>  // for SD card
 #include <SD.h>   // for SD card
 
-const int delay_time = 5;   // time between games of bop it after win or loss
-const int max_start_time = 5;  // most time allowed for successful action
+const int delayTime = 5;   // time between games of bop it after win or loss
+const int maxStartTime = 5;  // most time allowed for successful action
+
 const int TWIST_IT = 0;
 const int PUSH_IT = 1;
 const int SHAKE_IT = 2;
@@ -60,21 +56,21 @@ void setup() {
 
 void loop() {
 
-  // if(play_game()){
+  // if(playGame()){
   //   winner();
   // } else{
   //   loser();
   // }
 
-  // delay(delay_time*1000);
-  play_game();
+  // delay(delayTime*1000);
+  playGame();
 }
 
 /**
   Turns on or off all leds
   @param mode can be either HIGH (on) or LOW (off)
 */
-void set_leds(int mode){
+void setLeds(int mode){
   digitalWrite(LED_0_PIN, mode);
   digitalWrite(LED_1_PIN, mode);
   digitalWrite(LED_2_PIN, mode);
@@ -83,21 +79,19 @@ void set_leds(int mode){
 /**
   Sets up SD card and anything needed for audio
 */
-void setup_audio(){
+void setupAudio(){
   SD.begin();
   SD.open("", FILE_READ);
 }
-
-
 
 /**
   Verifies that correct action was completed in time, no penalty for wrong input
   @param action_pin pin to check for correct action
   @param led_pin led pin corresponding to action to be turned off if correct action done
-  @param max_time time in seconds to complete action
+  @param maxTime time in seconds to complete action
   @return true if the correct action was completed in time
 */
-bool verify_action(int actionPin, int ledPin, int maxTime){
+bool verifyAction(int actionPin, int ledPin, int maxTime){
   digitalWrite(ledPin, HIGH);
   unsigned long startTime = millis();
 
@@ -112,10 +106,27 @@ bool verify_action(int actionPin, int ledPin, int maxTime){
 }
 
 /**
-
+  Verifies that the slider was pushed to desired amount within the alloted time frame
+  @param maxTime maximum ammount of time to complete twist it action
+  @return true if the push it action was completed in time
 */
-bool verify_encoder(int maxTime){
-  // int a = digitalRead(ENCODER_A_PIN);
+bool verifySlider(int maxTime){
+  unsigned long startTime = millis();
+  int startPos = analogRead(SLIDER_PIN);
+
+  while (millis() - startTime < maxTime){
+    if (abs(analogRead(SLIDER_PIN) - startPos) >= 500) return true;
+  }
+
+  return false;
+}
+
+/**
+  Verifies that the encoder was twisted to desired amount within the alloted time frame
+  @param maxTime maximum ammount of time to complete twist it action
+  @return true if the twist it action was completed in time
+*/
+bool verifyEncoder(int maxTime){
   unsigned long startTime = millis();
   int counter = 0;
 
@@ -127,7 +138,8 @@ bool verify_encoder(int maxTime){
      } else {
        counter --;
      }
-     if (abs(counter) >= 10000) return true;
+     //Serial.print(counter);
+     if (abs(counter) >= 500) return true; // Threshold for twist it command
    }    
   }
 
@@ -138,37 +150,41 @@ bool verify_encoder(int maxTime){
   Basic game function, player gets action and must follow action
   @return true if player reaches 100 actions
 */
-bool play_game(){
+bool playGame(){
   int count = 0;
-  int max_time = max_start_time;
+  int maxTime = maxStartTime;
 
   while (count <= 99){
     //int action = random(3);
-    int action = TWIST_IT;
-    Serial.print(count);
+    int action = PUSH_IT;
+    //Serial.print(count);
     switch (action){
       case TWIST_IT:
         aEncoderLastState = digitalRead(ENCODER_A_PIN);
-        if (!verify_encoder(max_time*1000)){
-          Serial.println(": FAILED");
+        if (!verifyEncoder(maxTime*1000)){
+          Serial.println("FAILED TWISTED");
           return false;
         } else{
-          Serial.println(": TWISTED");
+          Serial.println("TWISTED");
         }
       break;
 
       case PUSH_IT:
-        if (!verify_action(SLIDER_PIN, LED_1_PIN, max_time*1000)) return false;
+        if (!verifySlider(maxTime*1000)){
+          Serial.println("FAILED PUSH");
+        } else{
+          Serial.println("PUSHED");
+        }
       break;
 
       case SHAKE_IT:
-        //if (!verify_action(ACCEL_PIN, LED_2_PIN, max_time*1000)) return false;
+        //if (!verifyAction(ACCEL_PIN, LED_2_PIN, maxTime*1000)) return false;
       break;
     }
 
     count++;
-    max_time = max_time / 1.025;    // arbitrary value to speed up
-    delay(500);
+    //maxTime = maxTime / 1.025;    // arbitrary value to speed up
+    delay(500);                     // wait half a second in between giving commands
   }
 
   return true;
@@ -178,18 +194,18 @@ bool play_game(){
   Whatever happens when the player wins
 */
 void winner(){
-  set_leds(HIGH);
+  setLeds(HIGH);
 
   // play winner sound
 
-  set_leds(LOW);
+  setLeds(LOW);
 }
 
 /**
   Whatever happens when the player loses
 */
 void loser(){
-  set_leds(LOW);
+  setLeds(LOW);
 
   // play loser sound
 }
