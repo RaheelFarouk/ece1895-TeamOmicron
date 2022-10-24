@@ -6,6 +6,10 @@
 #include <SPI.h>  // for SD card
 #include <SD.h>   // for SD card
 
+#include <Adafruit_MPU6050.h>
+#include <Adafruit_Sensor.h>
+#include <Wire.h>
+
 
 
 // Macros for pin numbers
@@ -37,6 +41,7 @@ int aEncoderState;
 int aEncoderLastState;
 
 LiquidCrystal_I2C lcd(0x27,16,2);  // set the LCD address to 0x27 for a 16 chars and 2 line display
+Adafruit_MPU6050 mpu;
 
 void setup() {
   Serial.begin(9600);
@@ -60,6 +65,20 @@ void setup() {
 
   lcd.init();
   lcd.backlight();  
+
+
+  //Setting up the Gyro?/Accel
+  // Try to initialize MPU6050!
+  if (!mpu.begin()) {
+    Serial.println("Failed to find MPU6050 chip");
+    while (1) {
+      delay(10);
+    }
+  }
+  mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
+  mpu.setGyroRange(MPU6050_RANGE_500_DEG);
+  mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
+
 }
 
 void loop() {
@@ -168,6 +187,37 @@ bool verifyEncoder(int maxTime){
      //Serial.print(counter);
      if (abs(counter) >= 500) return true; // Threshold for twist it command
    }    
+  }
+
+  return false;
+}
+
+bool verifyAccel(int maxTime){
+  unsigned long startTime = millis();
+  int counter = 0;
+
+  while(millis() - startTime < maxTime){
+    // check other action inputs, for false positives
+    int startPos = analogRead(SLIDER_PIN);
+    if (abs(analogRead(SLIDER_PIN) - startPos) >= 20) return false;  
+
+    //check encoder input
+    aEncoderState = digitalRead(ENCODER_A_PIN);
+    if (aEncoderState != aEncoderLastState){     
+      if (digitalRead(ENCODER_B_PIN) != aEncoderState) { 
+        return false;
+      } else {
+        return false;
+      }
+      /* Get new sensor events with the readings */
+      sensors_event_t a, g, temp;
+      mpu.getEvent(&a, &g, &temp);
+
+      if(a.acceleration.z<-15.0){ //-10.0 is the acceleration threshold
+        return true;
+      }
+
+    }
   }
 
   return false;
