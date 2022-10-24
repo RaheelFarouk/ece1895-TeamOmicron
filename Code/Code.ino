@@ -1,5 +1,12 @@
 // ECE 1895 - Design Project 2 - Team Omicron
-// Veronica Bella, Raheel Farouk, Maggie Killmuer
+// Veronica Bella, Raheel Farouk, Maggie Killmeyer
+
+// libraries
+#include <LiquidCrystal_I2C.h>
+#include <SPI.h>  // for SD card
+#include <SD.h>   // for SD card
+
+
 
 // Macros for pin numbers
 // input pins
@@ -19,10 +26,6 @@
 #define SD_CARD_DI D11
 #define SPEAKER_PIN 9
 
-// libraries
-#include <SPI.h>  // for SD card
-#include <SD.h>   // for SD card
-
 const int delayTime = 5;   // time between games of bop it after win or loss
 const int maxStartTime = 5;  // most time allowed for successful action
 
@@ -32,6 +35,8 @@ const int SHAKE_IT = 2;
 
 int aEncoderState;
 int aEncoderLastState;
+
+LiquidCrystal_I2C lcd(0x27,16,2);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 
 void setup() {
   Serial.begin(9600);
@@ -52,6 +57,9 @@ void setup() {
   pinMode(LCD_SDA_PIN, OUTPUT);
 
   pinMode(SPEAKER_PIN, OUTPUT);
+
+  lcd.init();
+  lcd.backlight();  
 }
 
 void loop() {
@@ -91,19 +99,19 @@ void setupAudio(){
   @param maxTime time in seconds to complete action
   @return true if the correct action was completed in time
 */
-bool verifyAction(int actionPin, int ledPin, int maxTime){
-  digitalWrite(ledPin, HIGH);
-  unsigned long startTime = millis();
+// bool verifyAction(int actionPin, int ledPin, int maxTime){
+//   digitalWrite(ledPin, HIGH);
+//   unsigned long startTime = millis();
 
-  while(millis() - startTime < maxTime){
-    if(digitalRead(actionPin)){
-      digitalWrite(ledPin, LOW);
-      return true;
-    } 
-  }
+//   while(millis() - startTime < maxTime){
+//     if(digitalRead(actionPin)){
+//       digitalWrite(ledPin, LOW);
+//       return true;
+//     } 
+//   }
   
-  return false;
-}
+//   return false;
+// }
 
 /**
   Verifies that the slider was pushed to desired amount within the alloted time frame
@@ -115,6 +123,19 @@ bool verifySlider(int maxTime){
   int startPos = analogRead(SLIDER_PIN);
 
   while (millis() - startTime < maxTime){
+    // check other action inputs, for false positives
+    
+    aEncoderState = digitalRead(ENCODER_A_PIN);
+    if (aEncoderState != aEncoderLastState){     
+     if (digitalRead(ENCODER_B_PIN) != aEncoderState) { 
+       return false;
+     } else {
+       return false;
+     }
+    }
+
+    // verify no gyro
+
     if (abs(analogRead(SLIDER_PIN) - startPos) >= 500) return true;
   }
 
@@ -131,6 +152,12 @@ bool verifyEncoder(int maxTime){
   int counter = 0;
 
   while(millis() - startTime < maxTime){
+    // check other action inputs, for false positives
+    int startPos = analogRead(SLIDER_PIN);
+    if (abs(analogRead(SLIDER_PIN) - startPos) >= 20) return false;  
+
+    // verify no gyro
+
     aEncoderState = digitalRead(ENCODER_A_PIN);
     if (aEncoderState != aEncoderLastState){     
      if (digitalRead(ENCODER_B_PIN) != aEncoderState) { 
@@ -155,25 +182,25 @@ bool playGame(){
   int maxTime = maxStartTime;
 
   while (count <= 99){
-    //int action = random(3);
-    int action = PUSH_IT;
+    int action = random(2);
     //Serial.print(count);
     switch (action){
       case TWIST_IT:
+
+        lcd.print("TWIST IT!");
+
         aEncoderLastState = digitalRead(ENCODER_A_PIN);
         if (!verifyEncoder(maxTime*1000)){
-          Serial.println("FAILED TWISTED");
-          return false;
-        } else{
-          Serial.println("TWISTED");
+          lcd.clear();
+          //return false;
         }
       break;
 
       case PUSH_IT:
+        lcd.print("PUSH IT!");
         if (!verifySlider(maxTime*1000)){
-          Serial.println("FAILED PUSH");
-        } else{
-          Serial.println("PUSHED");
+          lcd.clear();
+          //return false;
         }
       break;
 
