@@ -112,27 +112,6 @@ void setupAudio(){
 }
 
 /**
-  Verifies that correct action was completed in time, no penalty for wrong input
-  @param action_pin pin to check for correct action
-  @param led_pin led pin corresponding to action to be turned off if correct action done
-  @param maxTime time in seconds to complete action
-  @return true if the correct action was completed in time
-*/
-// bool verifyAction(int actionPin, int ledPin, int maxTime){
-//   digitalWrite(ledPin, HIGH);
-//   unsigned long startTime = millis();
-
-//   while(millis() - startTime < maxTime){
-//     if(digitalRead(actionPin)){
-//       digitalWrite(ledPin, LOW);
-//       return true;
-//     } 
-//   }
-  
-//   return false;
-// }
-
-/**
   Verifies that the slider was pushed to desired amount within the alloted time frame
   @param maxTime maximum ammount of time to complete twist it action
   @return true if the push it action was completed in time
@@ -242,7 +221,7 @@ bool playGame(){
         aEncoderLastState = digitalRead(ENCODER_A_PIN);
         if (!verifyEncoder(maxTime*1000)){
           lcd.clear();
-          //return false;
+          return false;
         }
       break;
 
@@ -255,7 +234,11 @@ bool playGame(){
       break;
 
       case SHAKE_IT:
-        //if (!verifyAction(ACCEL_PIN, LED_2_PIN, maxTime*1000)) return false;
+        lcd.print("PUSH IT!");
+        if (!verifyAccel(maxTime*1000)){
+          lcd.clear();
+          return false;
+        }
       break;
     }
 
