@@ -209,15 +209,14 @@ bool verifyAccel(int maxTime){
       } else {
         return false;
       }
-      /* Get new sensor events with the readings */
+    }
+          /* Get new sensor events with the readings */
       sensors_event_t a, g, temp;
       mpu.getEvent(&a, &g, &temp);
 
       if(a.acceleration.z<-15.0){ //-10.0 is the acceleration threshold
         return true;
       }
-
-    }
   }
 
   return false;
