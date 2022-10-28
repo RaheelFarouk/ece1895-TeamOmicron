@@ -133,6 +133,13 @@ bool verifySlider(int maxTime){
     }
 
     // verify no gyro
+    /* Get new sensor events with the readings */
+    sensors_event_t a, g, temp;
+    mpu.getEvent(&a, &g, &temp);
+
+    if(a.acceleration.z<-15.0){ //-10.0 is the acceleration threshold
+      return true;
+    }
 
     if (abs(analogRead(SLIDER_PIN) - startPos) >= 500) return true;
   }
@@ -155,6 +162,13 @@ bool verifyEncoder(int maxTime){
     if (abs(analogRead(SLIDER_PIN) - startPos) >= 20) return false;  
 
     // verify no gyro
+    /* Get new sensor events with the readings */
+    sensors_event_t a, g, temp;
+    mpu.getEvent(&a, &g, &temp);
+
+    if(a.acceleration.z<-15.0){ //-10.0 is the acceleration threshold
+      return true;
+    }
 
     aEncoderState = digitalRead(ENCODER_A_PIN);
     if (aEncoderState != aEncoderLastState){     
@@ -189,13 +203,14 @@ bool verifyAccel(int maxTime){
         return false;
       }
     }
-          /* Get new sensor events with the readings */
-      sensors_event_t a, g, temp;
-      mpu.getEvent(&a, &g, &temp);
+    
+    /* Get new sensor events with the readings */
+    sensors_event_t a, g, temp;
+    mpu.getEvent(&a, &g, &temp);
 
-      if(a.acceleration.z<-15.0){ //-10.0 is the acceleration threshold
-        return true;
-      }
+    if(a.acceleration.z<-15.0){ //-10.0 is the acceleration threshold
+      return true;
+    }
   }
 
   return false;
@@ -228,7 +243,7 @@ bool playGame(){
         lcd.print("PUSH IT!");
         if (!verifySlider(maxTime*1000)){
           lcd.clear();
-          //return false;
+          return false;
         }
       break;
 
