@@ -10,6 +10,8 @@
 #include <Adafruit_Sensor.h>
 #include <Wire.h>
 
+#include "SoftwareSerial.h"
+#include "DFRobotDFPlayerMini.h"
 
 
 // Macros for pin numbers
@@ -42,6 +44,9 @@ int aEncoderLastState;
 
 LiquidCrystal_I2C lcd(0x27,16,2);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 Adafruit_MPU6050 mpu;
+
+SoftwareSerial mySoftwareSerial(8, 9); // RX, TX
+DFRobotDFPlayerMini myDFPlayer;
 
 void setup() {
   Serial.begin(9600);
@@ -78,6 +83,20 @@ void setup() {
   mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
   mpu.setGyroRange(MPU6050_RANGE_500_DEG);
   mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
+
+  //begin the communicationwith the mp3 module
+  mySoftwareSerial.begin(9600);
+  if (!myDFPlayer.begin(mySoftwareSerial)) {  //Use softwareSerial to communicate with mp3.
+    Serial.println(F("Unable to begin:"));
+    Serial.println(F("1.Please recheck the connection!"));
+    Serial.println(F("2.Please insert the SD card!"));
+    while(true){
+      delay(0); // Code to compatible with ESP8266 watch dog.
+    }
+  }
+  Serial.println(F("DFPlayer Mini online."));
+  
+  myDFPlayer.volume(15);  //Set volume value. From 0 to 30
 
 }
 
@@ -231,6 +250,7 @@ bool playGame(){
       case TWIST_IT:
 
         lcd.print("TWIST IT!");
+        //myDFPlayer.play(); //enter track number in brackets
 
         aEncoderLastState = digitalRead(ENCODER_A_PIN);
         if (!verifyEncoder(maxTime*1000)){
