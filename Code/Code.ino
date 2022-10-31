@@ -3,6 +3,7 @@
 
 // libraries
 #include <LiquidCrystal_I2C.h>
+#include <DFRobot_RGBLCD1602.h>
 #include <SPI.h>  // for SD card
 #include <SD.h>   // for SD card
 
@@ -10,6 +11,8 @@
 #include <Adafruit_Sensor.h>
 #include <Wire.h>
 
+#include "SoftwareSerial.h"
+#include "DFRobotDFPlayerMini.h"
 
 
 // Macros for pin numbers
@@ -28,7 +31,8 @@
 #define LCD_SDA_PIN A4
 #define SD_CARD_DO D12
 #define SD_CARD_DI D11
-#define SPEAKER_PIN 9
+#define SoftwareSerialTX 9
+#define SoftwareSerialRX 8
 
 const int delayTime = 5;   // time between games of bop it after win or loss
 const int maxStartTime = 5;  // most time allowed for successful action
@@ -40,8 +44,11 @@ const int SHAKE_IT = 2;
 int aEncoderState;
 int aEncoderLastState;
 
-LiquidCrystal_I2C lcd(0x27,16,2);  // set the LCD address to 0x27 for a 16 chars and 2 line display
+DFRobot_RGBLCD1602 lcd(16,2);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 Adafruit_MPU6050 mpu;
+
+SoftwareSerial mySoftwareSerial(SoftwareSerialRX, SoftwareSerialTX); // RX, TX
+DFRobotDFPlayerMini myDFPlayer;
 
 void setup() {
   Serial.begin(9600);
@@ -61,10 +68,12 @@ void setup() {
   pinMode(LCD_SCL_PIN, OUTPUT);
   pinMode(LCD_SDA_PIN, OUTPUT);
 
-  pinMode(SPEAKER_PIN, OUTPUT);
+  //pinMode(SPEAKER_PIN, OUTPUT);
 
   lcd.init();
-  lcd.backlight();  
+  lcd.setBacklight(true);
+  lcd.setRGB(255,255,255);
+
 
 
   //Setting up the Gyro?/Accel
@@ -78,6 +87,20 @@ void setup() {
   mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
   mpu.setGyroRange(MPU6050_RANGE_500_DEG);
   mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
+
+  //begin the communicationwith the mp3 module
+  mySoftwareSerial.begin(9600);
+  if (!myDFPlayer.begin(mySoftwareSerial)) {  //Use softwareSerial to communicate with mp3.
+    Serial.println(F("Unable to begin:"));
+    Serial.println(F("1.Please recheck the connection!"));
+    Serial.println(F("2.Please insert the SD card!"));
+    while(true){
+      delay(0); // Code to compatible with ESP8266 watch dog.
+    }
+  }
+  Serial.println(F("DFPlayer Mini online."));
+  
+  myDFPlayer.volume(15);  //Set volume value. From 0 to 30
 
 }
 
@@ -133,6 +156,13 @@ bool verifySlider(int maxTime){
     }
 
     // verify no gyro
+    /* Get new sensor events with the readings */
+    sensors_event_t a, g, temp;
+    mpu.getEvent(&a, &g, &temp);
+
+    if(a.acceleration.z<-15.0){ //-10.0 is the acceleration threshold
+      return true;
+    }
 
     if (abs(analogRead(SLIDER_PIN) - startPos) >= 500) return true;
   }
@@ -155,6 +185,13 @@ bool verifyEncoder(int maxTime){
     if (abs(analogRead(SLIDER_PIN) - startPos) >= 20) return false;  
 
     // verify no gyro
+    /* Get new sensor events with the readings */
+    sensors_event_t a, g, temp;
+    mpu.getEvent(&a, &g, &temp);
+
+    if(a.acceleration.z<-15.0){ //-10.0 is the acceleration threshold
+      return true;
+    }
 
     aEncoderState = digitalRead(ENCODER_A_PIN);
     if (aEncoderState != aEncoderLastState){     
@@ -189,13 +226,14 @@ bool verifyAccel(int maxTime){
         return false;
       }
     }
-          /* Get new sensor events with the readings */
-      sensors_event_t a, g, temp;
-      mpu.getEvent(&a, &g, &temp);
+    
+    /* Get new sensor events with the readings */
+    sensors_event_t a, g, temp;
+    mpu.getEvent(&a, &g, &temp);
 
-      if(a.acceleration.z<-15.0){ //-10.0 is the acceleration threshold
-        return true;
-      }
+    if(a.acceleration.z<-15.0){ //-10.0 is the acceleration threshold
+      return true;
+    }
   }
 
   return false;
@@ -216,6 +254,7 @@ bool playGame(){
       case TWIST_IT:
 
         lcd.print("TWIST IT!");
+        //myDFPlayer.play(); //enter track number in brackets
 
         aEncoderLastState = digitalRead(ENCODER_A_PIN);
         if (!verifyEncoder(maxTime*1000)){
@@ -228,7 +267,7 @@ bool playGame(){
         lcd.print("PUSH IT!");
         if (!verifySlider(maxTime*1000)){
           lcd.clear();
-          //return false;
+          return false;
         }
       break;
 
