@@ -3,6 +3,7 @@
 
 // libraries
 #include <LiquidCrystal_I2C.h>
+#include <DFRobot_RGBLCD1602.h>
 #include <SPI.h>  // for SD card
 #include <SD.h>   // for SD card
 
@@ -30,7 +31,8 @@
 #define LCD_SDA_PIN A4
 #define SD_CARD_DO D12
 #define SD_CARD_DI D11
-#define SPEAKER_PIN 9
+#define SoftwareSerialTX 9
+#define SoftwareSerialRX 8
 
 const int delayTime = 5;   // time between games of bop it after win or loss
 const int maxStartTime = 5;  // most time allowed for successful action
@@ -42,10 +44,10 @@ const int SHAKE_IT = 2;
 int aEncoderState;
 int aEncoderLastState;
 
-LiquidCrystal_I2C lcd(0x27,16,2);  // set the LCD address to 0x27 for a 16 chars and 2 line display
+DFRobot_RGBLCD1602 lcd(16,2);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 Adafruit_MPU6050 mpu;
 
-SoftwareSerial mySoftwareSerial(8, 9); // RX, TX
+SoftwareSerial mySoftwareSerial(SoftwareSerialRX, SoftwareSerialTX); // RX, TX
 DFRobotDFPlayerMini myDFPlayer;
 
 void setup() {
@@ -66,10 +68,12 @@ void setup() {
   pinMode(LCD_SCL_PIN, OUTPUT);
   pinMode(LCD_SDA_PIN, OUTPUT);
 
-  pinMode(SPEAKER_PIN, OUTPUT);
+  //pinMode(SPEAKER_PIN, OUTPUT);
 
   lcd.init();
-  lcd.backlight();  
+  lcd.setBacklight(true);
+  lcd.setRGB(255,255,255);
+
 
 
   //Setting up the Gyro?/Accel
