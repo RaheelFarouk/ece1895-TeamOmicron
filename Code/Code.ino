@@ -136,6 +136,8 @@ void loop() {
 =======
   delay(delayTime*1000);
 
+  delay(delayTime*1000);
+
   if(playGame()){
     winner();
   } else{
