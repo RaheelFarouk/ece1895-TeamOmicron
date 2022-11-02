@@ -110,13 +110,14 @@ void setup() {
 
 void loop() {
 
+  delay(delayTime*1000);
+
   if(playGame()){
     winner();
   } else{
     loser();
   }
 
-  delay(delayTime*1000);
   // playGame();
 }
 
@@ -256,7 +257,7 @@ bool playGame(){
     //Serial.print(count);
     switch (action){
       case TWIST_IT:
-        lcd.clear()
+        lcd.clear();
         lcd.print("TWIST IT!");
         //myDFPlayer.play(); //enter track number in brackets
 
