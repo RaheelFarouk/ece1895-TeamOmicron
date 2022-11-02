@@ -165,8 +165,8 @@ bool verifySlider(int maxTime){
     sensors_event_t a, g, temp;
     mpu.getEvent(&a, &g, &temp);
 
-    if(a.acceleration.z<-15.0){ //-10.0 is the acceleration threshold
-      return true;
+    if(abs(a.acceleration.z)>15.0){ //-10.0 is the acceleration threshold
+      return false;
     }
 
     if (abs(analogRead(SLIDER_PIN) - startPos) >= 500) return true;
@@ -194,19 +194,26 @@ bool verifyEncoder(int maxTime){
     sensors_event_t a, g, temp;
     mpu.getEvent(&a, &g, &temp);
 
-    if(a.acceleration.z<-15.0){ //-10.0 is the acceleration threshold
-      return true;
+    if(abs(a.acceleration.z)>15.0){ //-10.0 is the acceleration threshold
+      return false;
     }
 
     aEncoderState = digitalRead(ENCODER_A_PIN);
     if (aEncoderState != aEncoderLastState){     
      if (digitalRead(ENCODER_B_PIN) != aEncoderState) { 
        counter ++;
+      //  return true;
      } else {
        counter --;
+      //  return true;
      }
      //Serial.print(counter);
-     if (abs(counter) >= 500) return true; // Threshold for twist it command
+     if (abs(counter) >= 5){
+       return true; // Threshold for twist it command
+       lcd.clear();  
+     } 
+
+     //lcd.print("passed counter");
    }    
   }
 
@@ -218,6 +225,15 @@ bool verifyAccel(int maxTime){
   int counter = 0;
 
   while(millis() - startTime < maxTime){
+    /* Get new sensor events with the readings */
+    sensors_event_t a, g, temp;
+    mpu.getEvent(&a, &g, &temp);
+
+    if(abs(a.acceleration.z)>10.0){ //-10.0 is the acceleration threshold
+      lcd.clear();
+      return true;
+    }
+    lcd.print(a.acceleration.z);
     // check other action inputs, for false positives
     int startPos = analogRead(SLIDER_PIN);
     if (abs(analogRead(SLIDER_PIN) - startPos) >= 20) return false;  
@@ -230,14 +246,6 @@ bool verifyAccel(int maxTime){
       } else {
         return false;
       }
-    }
-    
-    /* Get new sensor events with the readings */
-    sensors_event_t a, g, temp;
-    mpu.getEvent(&a, &g, &temp);
-
-    if(a.acceleration.z<-15.0){ //-10.0 is the acceleration threshold
-      return true;
     }
   }
 
@@ -254,6 +262,7 @@ bool playGame(){
 
   while (count <= 99){
     int action = random(2);
+    // int action = 2;
     //Serial.print(count);
     switch (action){
       case TWIST_IT:
@@ -263,9 +272,10 @@ bool playGame(){
 
         aEncoderLastState = digitalRead(ENCODER_A_PIN);
         if (!verifyEncoder(maxTime*1000)){
-          lcd.clear();
+          //lcd.clear();
           return false;
         }
+        lcd.clear();
       break;
 
       case PUSH_IT:
@@ -275,6 +285,7 @@ bool playGame(){
           lcd.clear();
           return false;
         }
+        lcd.clear();
       break;
 
       case SHAKE_IT:
@@ -284,6 +295,7 @@ bool playGame(){
           lcd.clear();
           return false;
         }
+        lcd.clear();
       break;
     }
 
