@@ -109,15 +109,29 @@ void setup() {
 }
 
 void loop() {
+  delay(delayTime*1000);
 
-  if(playGame()){
-    winner();
-  } else{
-    loser();
+  int choice = menu();
+
+  switch (choice){
+    case 0:
+      lcd.print("PLAY GAME MODE ACTIVATED");
+      // if(playGame()){
+      //   winner();
+      // } else{
+      //   loser();
+      // }
+      break;
+
+    case 1:
+      lcd.print("CHAOS MODE ACTIVATED");
+      break;
+
+    case 2:
+      lcd.print("TEST MODE ACTIVATED");
+      break;    
   }
 
-  delay(delayTime*1000);
-  // playGame();
 }
 
 /**
@@ -256,7 +270,7 @@ bool playGame(){
     //Serial.print(count);
     switch (action){
       case TWIST_IT:
-        lcd.clear()
+        lcd.clear();
         lcd.print("TWIST IT!");
         //myDFPlayer.play(); //enter track number in brackets
 
@@ -314,4 +328,41 @@ void loser(){
 
 
   // play loser sound
+}
+
+/**
+  Menu to select what mode to be in
+  @return int game mode index
+*/
+int menu(){
+  int selector = 0;
+  char *menuOptions[] = {"Play Game", "CHAOS Mode", "Test"};
+  int length = sizeof(menuOptions)/sizeof(menuOptions[0]);
+  
+  lcd.print(menuOptions[selector]);
+
+  int startPos = analogRead(SLIDER_PIN);
+
+  while ((abs(analogRead(SLIDER_PIN) - startPos) < 500)){
+    aEncoderState = digitalRead(ENCODER_A_PIN);
+    if (aEncoderState != aEncoderLastState){     
+     if (digitalRead(ENCODER_B_PIN) != aEncoderState) { 
+       selector ++;
+     } else {
+       selector --;
+     }
+    
+     if (selector < 0){
+       selector = length;
+     } else if (selector > length){
+       selector = 0;
+     }
+    }
+    lcd.clear();
+    lcd.print(menuOptions[selector]); 
+    
+  }
+
+  return selector;
+
 }
