@@ -111,7 +111,6 @@ void setup() {
 void loop() {
   delay(delayTime*1000);
 
-<<<<<<< HEAD
   int choice = menu();
 
   switch (choice){
@@ -133,7 +132,6 @@ void loop() {
       break;    
   }
 
-=======
   delay(delayTime*1000);
 
   delay(delayTime*1000);
@@ -145,7 +143,6 @@ void loop() {
   }
 
   // playGame();
->>>>>>> 051843f85f4426f664eb3db3300359e2573faa61
 }
 
 /**
