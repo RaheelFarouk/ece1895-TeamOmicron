@@ -71,8 +71,8 @@ void setup() {
   //pinMode(SPEAKER_PIN, OUTPUT);
 
   lcd.init();
-  lcd.setBacklight(true);
-  lcd.setRGB(255,255,255);
+  lcd.setBacklight(false);
+  lcd.setRGB(127,255,255);
 
 
 
@@ -102,6 +102,10 @@ void setup() {
   
   myDFPlayer.volume(15);  //Set volume value. From 0 to 30
 
+  lcd.print("Hello");
+  delay(10);
+  myDFPlayer.play(3);
+
 }
 
 void loop() {
@@ -126,13 +130,13 @@ void setLeds(int mode){
   digitalWrite(LED_2_PIN, mode);
 }
 
-/**
-  Sets up SD card and anything needed for audio
-*/
-void setupAudio(){
-  SD.begin();
-  SD.open("", FILE_READ);
-}
+// /**
+//   Sets up SD card and anything needed for audio
+// */
+// void setupAudio(){
+//   SD.begin();
+//   SD.open("", FILE_READ);
+// }
 
 /**
   Verifies that the slider was pushed to desired amount within the alloted time frame
@@ -295,8 +299,8 @@ void winner(){
   setLeds(HIGH);
 
   // play winner sound
+  lcd.print("You Win");
 
-  setLeds(LOW);
 }
 
 /**
@@ -304,6 +308,8 @@ void winner(){
 */
 void loser(){
   setLeds(LOW);
+  lcd.print("You Win");
+
 
   // play loser sound
 }
