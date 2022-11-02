@@ -110,14 +110,14 @@ void setup() {
 
 void loop() {
 
-  // if(playGame()){
-  //   winner();
-  // } else{
-  //   loser();
-  // }
+  if(playGame()){
+    winner();
+  } else{
+    loser();
+  }
 
-  // delay(delayTime*1000);
-  playGame();
+  delay(delayTime*1000);
+  // playGame();
 }
 
 /**
@@ -256,7 +256,7 @@ bool playGame(){
     //Serial.print(count);
     switch (action){
       case TWIST_IT:
-
+        lcd.clear()
         lcd.print("TWIST IT!");
         //myDFPlayer.play(); //enter track number in brackets
 
@@ -268,6 +268,7 @@ bool playGame(){
       break;
 
       case PUSH_IT:
+        lcd.clear();
         lcd.print("PUSH IT!");
         if (!verifySlider(maxTime*1000)){
           lcd.clear();
@@ -276,7 +277,8 @@ bool playGame(){
       break;
 
       case SHAKE_IT:
-        lcd.print("PUSH IT!");
+        lcd.clear();
+        lcd.print("SHAKE IT!");
         if (!verifyAccel(maxTime*1000)){
           lcd.clear();
           return false;
@@ -308,7 +310,7 @@ void winner(){
 */
 void loser(){
   setLeds(LOW);
-  lcd.print("You Win");
+  lcd.print("You Lose");
 
 
   // play loser sound
