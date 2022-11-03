@@ -25,8 +25,8 @@
 
 // output pins
 #define LED_0_PIN 3
-#define LED_1_PIN 4
-#define LED_2_PIN 5
+//#define LED_1_PIN 4
+//#define LED_2_PIN 5
 #define LCD_SCL_PIN A5
 #define LCD_SDA_PIN A4
 #define SD_CARD_DO D12
@@ -78,39 +78,44 @@ void setup() {
 
   //Setting up the Gyro?/Accel
   // Try to initialize MPU6050!
-  if (!mpu.begin()) {
-    Serial.println("Failed to find MPU6050 chip");
-    while (1) {
-      delay(10);
+  bool test = false;
+  if (test){
+    if (!mpu.begin()) {
+      Serial.println("Failed to find MPU6050 chip");
+      while (1) {
+        delay(10);
+      }
     }
-  }
-  mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
-  mpu.setGyroRange(MPU6050_RANGE_500_DEG);
-  mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
+    mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
+    mpu.setGyroRange(MPU6050_RANGE_500_DEG);
+    mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
 
-  //begin the communicationwith the mp3 module
-  mySoftwareSerial.begin(9600);
-  if (!myDFPlayer.begin(mySoftwareSerial)) {  //Use softwareSerial to communicate with mp3.
-    Serial.println(F("Unable to begin:"));
-    Serial.println(F("1.Please recheck the connection!"));
-    Serial.println(F("2.Please insert the SD card!"));
-    while(true){
-      delay(0); // Code to compatible with ESP8266 watch dog.
+    //begin the communicationwith the mp3 module
+    mySoftwareSerial.begin(9600);
+    if (!myDFPlayer.begin(mySoftwareSerial)) {  //Use softwareSerial to communicate with mp3.
+      Serial.println(F("Unable to begin:"));
+      Serial.println(F("1.Please recheck the connection!"));
+      Serial.println(F("2.Please insert the SD card!"));
+      while(true){
+        delay(0); // Code to compatible with ESP8266 watch dog.
+      }
     }
+    Serial.println(F("DFPlayer Mini online."));
+    
+    myDFPlayer.volume(15);  //Set volume value. From 0 to 30
+
+    lcd.print("Hello");
+    delay(10);
+    myDFPlayer.play(3);
   }
-  Serial.println(F("DFPlayer Mini online."));
   
-  myDFPlayer.volume(15);  //Set volume value. From 0 to 30
-
-  lcd.print("Hello");
-  delay(10);
-  myDFPlayer.play(3);
+  lcd.clear();
 
 }
 
 void loop() {
-  delay(delayTime*1000);
-
+  //delay(delayTime*1000);
+ 
   int choice = menu();
 
   switch (choice){
@@ -131,18 +136,6 @@ void loop() {
       lcd.print("TEST MODE ACTIVATED");
       break;    
   }
-
-  delay(delayTime*1000);
-
-  delay(delayTime*1000);
-
-  if(playGame()){
-    winner();
-  } else{
-    loser();
-  }
-
-  // playGame();
 }
 
 /**
@@ -258,6 +251,7 @@ bool verifyAccel(int maxTime){
       return true;
     }
     lcd.print(a.acceleration.z);
+
     // check other action inputs, for false positives
     int startPos = analogRead(SLIDER_PIN);
     if (abs(analogRead(SLIDER_PIN) - startPos) >= 20) return false;  
@@ -359,31 +353,44 @@ void loser(){
 */
 int menu(){
   int selector = 0;
+  int counter = 0;
   char *menuOptions[] = {"Play Game", "CHAOS Mode", "Test"};
   int length = sizeof(menuOptions)/sizeof(menuOptions[0]);
   
   lcd.print(menuOptions[selector]);
 
   int startPos = analogRead(SLIDER_PIN);
+  aEncoderLastState = digitalRead(ENCODER_A_PIN);
+  
+  while (true){
+    if (counter == 1000){
+      lcd.print(digitalRead(ENCODER_A_PIN));
+      lcd.print(" ");
+      lcd.print(digitalRead(ENCODER_B_PIN));
+      delay(250);
+      counter = 0;
+      lcd.clear();
+      delay(500);
+  } else{
+      counter++;
+  }    
+    //lcd.print(counter);
 
-  while ((abs(analogRead(SLIDER_PIN) - startPos) < 500)){
-    aEncoderState = digitalRead(ENCODER_A_PIN);
-    if (aEncoderState != aEncoderLastState){     
-     if (digitalRead(ENCODER_B_PIN) != aEncoderState) { 
-       selector ++;
-     } else {
-       selector --;
-     }
+    // aEncoderState = digitalRead(ENCODER_A_PIN);
+    // if (aEncoderState != aEncoderLastState){     
+    //   if (digitalRead(ENCODER_B_PIN) != aEncoderState) { 
+    //     lcd.clear();
+    //     counter ++;
+    //  } else {
+    //     lcd.clear();
+    //     counter --;
+    //  }
+    // }
+
     
-     if (selector < 0){
-       selector = length;
-     } else if (selector > length){
-       selector = 0;
-     }
-    }
-    lcd.clear();
-    lcd.print(menuOptions[selector]); 
-    
+   
+    //if (abs(analogRead(SLIDER_PIN) - startPos) > 500) break;
+    //delay(1000);
   }
 
   return selector;
