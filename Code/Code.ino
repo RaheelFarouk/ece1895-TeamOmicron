@@ -87,6 +87,7 @@ void setup() {
   mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
   mpu.setGyroRange(MPU6050_RANGE_500_DEG);
   mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
+  mpu.setHighPassFilter(MPU6050_HIGHPASS_5_HZ);
 
   //begin the communicationwith the mp3 module
   mySoftwareSerial.begin(9600);
@@ -165,7 +166,7 @@ bool verifySlider(int maxTime){
     sensors_event_t a, g, temp;
     mpu.getEvent(&a, &g, &temp);
 
-    if(abs(a.acceleration.z)>15.0){ //-10.0 is the acceleration threshold
+    if((a.acceleration.z)<-15.0){ //-10.0 is the acceleration threshold
       return false;
     }
 
@@ -194,7 +195,7 @@ bool verifyEncoder(int maxTime){
     sensors_event_t a, g, temp;
     mpu.getEvent(&a, &g, &temp);
 
-    if(abs(a.acceleration.z)>15.0){ //-10.0 is the acceleration threshold
+    if((a.acceleration.z)<-15.0){ //-10.0 is the acceleration threshold
       return false;
     }
 
@@ -229,7 +230,8 @@ bool verifyAccel(int maxTime){
     sensors_event_t a, g, temp;
     mpu.getEvent(&a, &g, &temp);
 
-    if(abs(a.acceleration.z)>10.0){ //-10.0 is the acceleration threshold
+    if((a.acceleration.z)<-15.0){ //-10.0 is the acceleration threshold
+      delay(100);
       lcd.clear();
       return true;
     }
