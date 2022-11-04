@@ -4,8 +4,8 @@
  *  
  */
  
- #define outputA 6
- #define outputB 7
+ #define outputA 2
+ #define outputB 3
 
  int counter = 0; 
  int aState;

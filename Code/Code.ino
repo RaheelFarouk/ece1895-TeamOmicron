@@ -43,6 +43,7 @@ const int SHAKE_IT = 2;
 
 int aEncoderState;
 int aEncoderLastState;
+int selector;
 
 DFRobot_RGBLCD1602 lcd(16,2);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 Adafruit_MPU6050 mpu;
@@ -106,6 +107,9 @@ void setup() {
   lcd.print("Hello");
   delay(10);
   myDFPlayer.play(3);
+
+  //get encoder last state
+  aEncoderLastState = digitalRead(ENCODER_A_PIN);
 
 }
 
@@ -344,6 +348,35 @@ void loser(){
   // play loser sound
 }
 
+
+void menuEncoder() {
+	
+	// Read the current state of CLK
+	aEncoderState = digitalRead(ENCODER_A_PIN);
+	// If last and current state of CLK are different, then pulse occurred
+	// React to only 1 state change to avoid double count
+	if (aEncoderState != aEncoderLastState  && aEncoderState == 1){
+		// If the DT state is different than the CLK state then
+		// the encoder is rotating CCW so decrement
+		if (digitalRead(ENCODER_B_PIN) != aEncoderState) {
+			selector --;
+			//currentDir ="CCW";
+		} else {
+			// Encoder is rotating CW so increment
+			selector ++;
+			//currentDir ="CW";
+		}
+		//Serial.print("Direction: ");
+		//Serial.print(currentDir);
+		Serial.print(" | Counter: ");
+		Serial.println(selector);
+	}
+	// Remember last CLK state
+	aEncoderLastState = aEncoderState;
+	// Put in a slight delay to help debounce the reading
+	delay(1);
+}
+
 /**
   Menu to select what mode to be in
   @return int game mode index
@@ -358,20 +391,15 @@ int menu(){
   int startPos = analogRead(SLIDER_PIN);
 
   while ((abs(analogRead(SLIDER_PIN) - startPos) < 500)){
-    aEncoderState = digitalRead(ENCODER_A_PIN);
-    if (aEncoderState != aEncoderLastState){     
-     if (digitalRead(ENCODER_B_PIN) != aEncoderState) { 
-       selector ++;
-     } else {
-       selector --;
-     }
+
+    menuEncoder();
     
      if (selector < 0){
        selector = length;
      } else if (selector > length){
        selector = 0;
      }
-    }
+    
     lcd.clear();
     lcd.print(menuOptions[selector]); 
     
