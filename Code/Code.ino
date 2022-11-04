@@ -116,26 +116,32 @@ void setup() {
 void loop() {
   delay(delayTime*1000);
 
-  int choice = menu();
+  // int choice = menu();
 
-  switch (choice){
-    case 0:
-      lcd.print("PLAY GAME MODE ACTIVATED");
-      // if(playGame()){
-      //   winner();
-      // } else{
-      //   loser();
-      // }
-      break;
+  // switch (choice){
+  //   case 0:
+  //     lcd.print("PLAY GAME MODE ACTIVATED");
+  //     // if(playGame()){
+  //     //   winner();
+  //     // } else{
+  //     //   loser();
+  //     // }
+  //     break;
 
-    case 1:
-      lcd.print("CHAOS MODE ACTIVATED");
-      break;
+  //   case 1:
+  //     lcd.print("CHAOS MODE ACTIVATED");
+  //     break;
 
-    case 2:
-      lcd.print("TEST MODE ACTIVATED");
-      break;    
-  }
+  //   case 2:
+  //     lcd.print("TEST MODE ACTIVATED");
+  //     break;    
+  // }
+
+      if(playGame()){
+        winner();
+      } else{
+        loser();
+      }
 
 }
 
