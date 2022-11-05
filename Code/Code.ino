@@ -115,33 +115,36 @@ void setup() {
 
 void loop() {
   delay(delayTime*1000);
+  lcd.clear();
+  lcd.print("Turn Knob");
+  int choice = menu();
 
-  // int choice = menu();
-
-  // switch (choice){
-  //   case 0:
-  //     lcd.print("PLAY GAME MODE ACTIVATED");
-  //     // if(playGame()){
-  //     //   winner();
-  //     // } else{
-  //     //   loser();
-  //     // }
-  //     break;
-
-  //   case 1:
-  //     lcd.print("CHAOS MODE ACTIVATED");
-  //     break;
-
-  //   case 2:
-  //     lcd.print("TEST MODE ACTIVATED");
-  //     break;    
-  // }
-
+  switch (choice){
+    case 0:
+      lcd.clear();
+      lcd.print("PLAY GAME MODE ACTIVATED");
+      delay(2000);
       if(playGame()){
         winner();
       } else{
         loser();
       }
+      break;
+
+    case 1:
+      lcd.print("CHAOS MODE ACTIVATED");
+      break;
+
+    case 2:
+      lcd.print("TEST MODE ACTIVATED");
+      break;    
+  }
+
+      // if(playGame()){
+      //   winner();
+      // } else{
+      //   loser();
+      // }
 
 }
 
@@ -189,7 +192,7 @@ bool verifySlider(int maxTime){
     sensors_event_t a, g, temp;
     mpu.getEvent(&a, &g, &temp);
 
-    if((a.acceleration.z)<-15.0){ //-10.0 is the acceleration threshold
+    if((a.acceleration.z)<-18.0){ //-10.0 is the acceleration threshold
       return false;
     }
 
@@ -207,18 +210,20 @@ bool verifySlider(int maxTime){
 bool verifyEncoder(int maxTime){
   unsigned long startTime = millis();
   int counter = 0;
+  int startPos = analogRead(SLIDER_PIN);
 
   while(millis() - startTime < maxTime){
     // check other action inputs, for false positives
-    int startPos = analogRead(SLIDER_PIN);
+    
     if (abs(analogRead(SLIDER_PIN) - startPos) >= 20) return false;  
+    startPos = analogRead(SLIDER_PIN);
 
     // verify no gyro
     /* Get new sensor events with the readings */
     sensors_event_t a, g, temp;
     mpu.getEvent(&a, &g, &temp);
 
-    if((a.acceleration.z)<-15.0){ //-10.0 is the acceleration threshold
+    if((a.acceleration.z)<-18.0){ //-10.0 is the acceleration threshold
       return false;
     }
 
@@ -247,21 +252,22 @@ bool verifyEncoder(int maxTime){
 bool verifyAccel(int maxTime){
   unsigned long startTime = millis();
   int counter = 0;
+  int startPos = analogRead(SLIDER_PIN);
 
   while(millis() - startTime < maxTime){
     /* Get new sensor events with the readings */
     sensors_event_t a, g, temp;
     mpu.getEvent(&a, &g, &temp);
 
-    if((a.acceleration.z)<-15.0){ //-10.0 is the acceleration threshold
+    if((a.acceleration.z)<-18.0){ //-10.0 is the acceleration threshold
       delay(100);
       lcd.clear();
       return true;
     }
-    lcd.print(a.acceleration.z);
+    //lcd.print(a.acceleration.z);
     // check other action inputs, for false positives
-    int startPos = analogRead(SLIDER_PIN);
     if (abs(analogRead(SLIDER_PIN) - startPos) >= 20) return false;  
+    startPos = analogRead(SLIDER_PIN);
 
     //check encoder input
     aEncoderState = digitalRead(ENCODER_A_PIN);
@@ -286,13 +292,14 @@ bool playGame(){
   int maxTime = maxStartTime;
 
   while (count <= 99){
-    int action = random(2);
+    int action = random(3);
     // int action = 2;
     //Serial.print(count);
     switch (action){
       case TWIST_IT:
         lcd.clear();
         lcd.print("TWIST IT!");
+        delay(20);
         //myDFPlayer.play(); //enter track number in brackets
 
         aEncoderLastState = digitalRead(ENCODER_A_PIN);
@@ -306,6 +313,7 @@ bool playGame(){
       case PUSH_IT:
         lcd.clear();
         lcd.print("PUSH IT!");
+        delay(20);
         if (!verifySlider(maxTime*1000)){
           lcd.clear();
           return false;
@@ -316,6 +324,7 @@ bool playGame(){
       case SHAKE_IT:
         lcd.clear();
         lcd.print("SHAKE IT!");
+        delay(20);
         if (!verifyAccel(maxTime*1000)){
           lcd.clear();
           return false;
@@ -338,6 +347,7 @@ bool playGame(){
 void winner(){
   setLeds(HIGH);
 
+  lcd.clear();
   // play winner sound
   lcd.print("You Win");
 
@@ -348,6 +358,7 @@ void winner(){
 */
 void loser(){
   setLeds(LOW);
+  lcd.clear();
   lcd.print("You Lose");
 
 
@@ -388,26 +399,33 @@ void menuEncoder() {
   @return int game mode index
 */
 int menu(){
-  int selector = 0;
+  selector = 0;
   char *menuOptions[] = {"Play Game", "CHAOS Mode", "Test"};
   int length = sizeof(menuOptions)/sizeof(menuOptions[0]);
   
-  lcd.print(menuOptions[selector]);
+  //lcd.print(menuOptions[selector]);
 
   int startPos = analogRead(SLIDER_PIN);
+  int oldValue;
 
-  while ((abs(analogRead(SLIDER_PIN) - startPos) < 500)){
+  // while ((abs(analogRead(SLIDER_PIN) - startPos) < 500)){
+  while (analogRead(SLIDER_PIN) < 500){
 
     menuEncoder();
     
-     if (selector < 0){
-       selector = length;
-     } else if (selector > length){
+     if (selector <= 0){
        selector = 0;
+     } else if (selector >= 2){
+       selector = 2;
      }
     
-    lcd.clear();
-    lcd.print(menuOptions[selector]); 
+    if(selector != oldValue){
+      lcd.clear();
+      lcd.print(menuOptions[selector]); 
+      oldValue = selector;
+    }else{
+      //do nothing
+    }
     
   }
 
