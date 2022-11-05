@@ -259,10 +259,12 @@ bool verifyAccel(int maxTime){
     sensors_event_t a, g, temp;
     mpu.getEvent(&a, &g, &temp);
 
-    if((a.acceleration.z)<-18.0){ //-10.0 is the acceleration threshold
-      delay(100);
-      lcd.clear();
-      return true;
+    if(abs((g.gyro.z+g.gyro.y+g.gyro.x)/3)>3){
+      if((a.acceleration.z)<-18.0){ //-10.0 is the acceleration threshold
+        delay(100);
+        lcd.clear();
+        return true;
+      }
     }
     //lcd.print(a.acceleration.z);
     // check other action inputs, for false positives
