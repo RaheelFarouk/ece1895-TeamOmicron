@@ -76,7 +76,7 @@ void setup() {
   lcd.init();
   lcd.setBacklight(false);
   lcd.setRGB(127,255,255);
-  //lcd.autoscroll();
+  lcd.autoscroll();
 
 
   //Setting up the Gyro?/Accel
@@ -106,7 +106,7 @@ void setup() {
   
   myDFPlayer.volume(20);  //Set volume value. From 0 to 30
   myDFPlayer.play(1);
-  delay(8000);
+  delay(10);
 
   //get encoder last state
   aEncoderLastState = digitalRead(ENCODER_A_PIN);
@@ -114,19 +114,18 @@ void setup() {
 }
 
 void loop() {
-  lcd.print("Turn knob to");
-  lcd.setCursor(0, 2);
-  lcd.print("choose Mode");
+
+  lcd.print("Choose a Game Mode by turning the knob");
+
   delay(delayTime*1000);
   lcd.clear();
   int choice = menu();
+  lcd.clear();
 
   switch (choice){
     case 0:
-      lcd.clear();
-      lcd.print("PLAY GAME MODE");
-      lcd.setCursor(0, 2);
-      lcd.print("ACTIVATED");
+      
+      lcd.print("PLAY GAME MODE ACTIVATED");
       delay(2000);
       if(playGame(9, 6, 8)){
         winner();
@@ -136,7 +135,6 @@ void loop() {
       break;
 
     case 1:
-      lcd.clear();
       lcd.print("CHAOS MODE ACTIVATED");
       delay(2000);
       lcd.clear();
@@ -150,9 +148,7 @@ void loop() {
       break;
 
     case 2:
-      lcd.clear();
       lcd.print("TUTORIAL MODE ACTIVATED");
-      delay(2000);
       break;    
   }
 
@@ -407,20 +403,21 @@ void menuEncoder() {
 int menu(){
   selector = 0;
   char *menuOptions[] = {"Play Game", "CHAOS Mode", "Tutorial"};
+  int length = sizeof(menuOptions)/sizeof(menuOptions[0]);
   
   //lcd.print(menuOptions[selector]);
 
   int startPos = analogRead(SLIDER_PIN);
   int oldValue;
 
-  //while ((abs(analogRead(SLIDER_PIN) - startPos) < 500)){
-  while (analogRead(SLIDER_PIN) < 500){
+  while ((abs(analogRead(SLIDER_PIN) - startPos) < 500)){
+  //while (analogRead(SLIDER_PIN) < 500){
 
     menuEncoder();
     
      if (selector < 0){
-       selector = 2;
-     } else if (selector > 2){
+       selector = length-1;
+     } else if (selector > length-1){
        selector = 0;
      }
     
