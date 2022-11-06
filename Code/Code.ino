@@ -35,7 +35,7 @@
 #define SoftwareSerialRX 8
 
 const int delayTime = 5;   // time between games of bop it after win or loss
-const int maxStartTime = 5;  // most time allowed for successful action
+const int maxStartTime = 8;  // most time allowed for successful action
 
 const int TWIST_IT = 0;
 const int PUSH_IT = 1;
@@ -104,14 +104,21 @@ void setup() {
   }
   Serial.println(F("DFPlayer Mini online."));
   
-  myDFPlayer.volume(20);  //Set volume value. From 0 to 30
+  myDFPlayer.volume(10);  //Set volume value. From 0 to 30
+  delay(200);
   myDFPlayer.play(1);
+  // delay(5000);
+  // myDFPlayer.play(11);
+  lcd.print("hello");
   delay(8000);
+  lcd.clear();
+  delay(200);
 
   //get encoder last state
   aEncoderLastState = digitalRead(ENCODER_A_PIN);
 
 }
+
 
 void loop() {
   lcd.print("Turn knob to");
@@ -157,6 +164,8 @@ void loop() {
   }
 
   firstPowerOn = false;
+  delay(5000);
+  lcd.clear();
 
 }
 
@@ -305,7 +314,7 @@ bool playGame(int twistAudio, int pushAudio, int shakeAudio){
       case TWIST_IT:
         lcd.print("TWIST IT!");
         myDFPlayer.play(twistAudio); //enter track number in brackets
-        delay(20);       
+        delay(50);       
 
         aEncoderLastState = digitalRead(ENCODER_A_PIN);
         if (!verifyEncoder(maxTime*1000)){
@@ -317,7 +326,7 @@ bool playGame(int twistAudio, int pushAudio, int shakeAudio){
       case PUSH_IT:
         lcd.print("PUSH IT!");
         myDFPlayer.play(pushAudio);
-        delay(20);
+        delay(50);
         
         if (!verifySlider(maxTime*1000)){
           lcd.clear();
@@ -329,7 +338,7 @@ bool playGame(int twistAudio, int pushAudio, int shakeAudio){
       case SHAKE_IT:
         lcd.print("SHAKE IT!");
         myDFPlayer.play(shakeAudio);
-        delay(20);
+        delay(50);
         if (!verifyAccel(maxTime*1000)){
           lcd.clear();
           return false;
