@@ -45,6 +45,8 @@ int aEncoderState;
 int aEncoderLastState;
 int selector;
 
+bool firstPowerOn = true;
+
 DFRobot_RGBLCD1602 lcd(16,2);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 Adafruit_MPU6050 mpu;
 
@@ -74,7 +76,7 @@ void setup() {
   lcd.init();
   lcd.setBacklight(false);
   lcd.setRGB(127,255,255);
-
+  lcd.autoscroll();
 
 
   //Setting up the Gyro?/Accel
@@ -104,9 +106,7 @@ void setup() {
   
   myDFPlayer.volume(15);  //Set volume value. From 0 to 30
 
-  lcd.print("Hello");
   delay(10);
-  myDFPlayer.play(3);
 
   //get encoder last state
   aEncoderLastState = digitalRead(ENCODER_A_PIN);
@@ -114,17 +114,23 @@ void setup() {
 }
 
 void loop() {
+
+  if (firstPowerOn){
+    lcd.print("Choose a Game Mode by turning the knob");
+    myDFPlayer.play(1);
+  }
+
   delay(delayTime*1000);
   lcd.clear();
-  lcd.print("Turn Knob");
   int choice = menu();
+  lcd.clear();
 
   switch (choice){
     case 0:
-      lcd.clear();
+      
       lcd.print("PLAY GAME MODE ACTIVATED");
       delay(2000);
-      if(playGame()){
+      if(playGame(9, 6, 8)){
         winner();
       } else{
         loser();
@@ -133,38 +139,25 @@ void loop() {
 
     case 1:
       lcd.print("CHAOS MODE ACTIVATED");
+      delay(2000);
+      lcd.clear();
+      lcd.print("Follow the written actions, NOT sound cues");
+      delay(2000);
+      if(playGame(9, 6, 8)){
+        winner();
+      } else{
+        loser();
+      }
       break;
 
     case 2:
-      lcd.print("TEST MODE ACTIVATED");
+      lcd.print("TUTORIAL MODE ACTIVATED");
       break;    
   }
 
-      // if(playGame()){
-      //   winner();
-      // } else{
-      //   loser();
-      // }
+  firstPowerOn = false;
 
 }
-
-/**
-  Turns on or off all leds
-  @param mode can be either HIGH (on) or LOW (off)
-*/
-void setLeds(int mode){
-  digitalWrite(LED_0_PIN, mode);
-  digitalWrite(LED_1_PIN, mode);
-  digitalWrite(LED_2_PIN, mode);
-}
-
-// /**
-//   Sets up SD card and anything needed for audio
-// */
-// void setupAudio(){
-//   SD.begin();
-//   SD.open("", FILE_READ);
-// }
 
 /**
   Verifies that the slider was pushed to desired amount within the alloted time frame
@@ -196,7 +189,12 @@ bool verifySlider(int maxTime){
       return false;
     }
 
-    if (abs(analogRead(SLIDER_PIN) - startPos) >= 500) return true;
+    int sliderPos = abs(analogRead(SLIDER_PIN) - startPos);
+    if (sliderPos >= 500){
+      return true;
+    } else if(sliderPos >= 275){
+      myDFPlayer.play(7);
+    }
   }
 
   return false;
@@ -231,6 +229,7 @@ bool verifyEncoder(int maxTime){
     if (aEncoderState != aEncoderLastState){     
      if (digitalRead(ENCODER_B_PIN) != aEncoderState) { 
        counter ++;
+       myDFPlayer.play(5);
       //  return true;
      } else {
        counter --;
@@ -266,6 +265,7 @@ bool verifyAccel(int maxTime){
         return true;
       }
     }
+
     //lcd.print(a.acceleration.z);
     // check other action inputs, for false positives
     if (abs(analogRead(SLIDER_PIN) - startPos) >= 20) return false;  
@@ -289,9 +289,11 @@ bool verifyAccel(int maxTime){
   Basic game function, player gets action and must follow action
   @return true if player reaches 100 actions
 */
-bool playGame(){
+bool playGame(int twistAudio, int pushAudio, int shakeAudio){
   int count = 0;
   int maxTime = maxStartTime;
+
+  myDFPlayer.play(3); // does player pause code?????
 
   while (count <= 99){
     int action = random(3);
@@ -301,12 +303,11 @@ bool playGame(){
       case TWIST_IT:
         lcd.clear();
         lcd.print("TWIST IT!");
-        //delay(20);
-        //myDFPlayer.play(); //enter track number in brackets
+        myDFPlayer.play(twistAudio); //enter track number in brackets
+        delay(20);       
 
         aEncoderLastState = digitalRead(ENCODER_A_PIN);
         if (!verifyEncoder(maxTime*1000)){
-          //lcd.clear();
           return false;
         }
         lcd.clear();
@@ -315,7 +316,9 @@ bool playGame(){
       case PUSH_IT:
         lcd.clear();
         lcd.print("PUSH IT!");
+        myDFPlayer.play(pushAudio);
         delay(20);
+        
         if (!verifySlider(maxTime*1000)){
           lcd.clear();
           return false;
@@ -326,6 +329,7 @@ bool playGame(){
       case SHAKE_IT:
         lcd.clear();
         lcd.print("SHAKE IT!");
+        myDFPlayer.play(shakeAudio);
         delay(20);
         if (!verifyAccel(maxTime*1000)){
           lcd.clear();
@@ -336,6 +340,7 @@ bool playGame(){
     }
 
     count++;
+    myDFPlayer.play(2);
     //maxTime = maxTime / 1.025;    // arbitrary value to speed up
     delay(500);                     // wait half a second in between giving commands
   }
@@ -347,7 +352,6 @@ bool playGame(){
   Whatever happens when the player wins
 */
 void winner(){
-  setLeds(HIGH);
 
   lcd.clear();
   // play winner sound
@@ -359,9 +363,10 @@ void winner(){
   Whatever happens when the player loses
 */
 void loser(){
-  setLeds(LOW);
   lcd.clear();
   lcd.print("You Lose");
+
+  myDFPlayer.play(4);
 
 
   // play loser sound
@@ -402,7 +407,7 @@ void menuEncoder() {
 */
 int menu(){
   selector = 0;
-  char *menuOptions[] = {"Play Game", "CHAOS Mode", "Test"};
+  char *menuOptions[] = {"Play Game", "CHAOS Mode", "Tutorial"};
   int length = sizeof(menuOptions)/sizeof(menuOptions[0]);
   
   //lcd.print(menuOptions[selector]);
@@ -415,10 +420,10 @@ int menu(){
 
     menuEncoder();
     
-     if (selector <= 0){
+     if (selector < 0){
+       selector = length-1;
+     } else if (selector > length-1){
        selector = 0;
-     } else if (selector >= 2){
-       selector = 2;
      }
     
     if(selector != oldValue){
