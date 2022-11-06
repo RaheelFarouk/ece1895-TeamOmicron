@@ -301,7 +301,7 @@ bool playGame(){
       case TWIST_IT:
         lcd.clear();
         lcd.print("TWIST IT!");
-        delay(20);
+        //delay(20);
         //myDFPlayer.play(); //enter track number in brackets
 
         aEncoderLastState = digitalRead(ENCODER_A_PIN);
@@ -425,8 +425,6 @@ int menu(){
       lcd.clear();
       lcd.print(menuOptions[selector]); 
       oldValue = selector;
-    }else{
-      //do nothing
     }
     
   }
