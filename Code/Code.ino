@@ -75,7 +75,7 @@ void setup() {
 
   lcd.init();
   lcd.setBacklight(false);
-  lcd.setRGB(127,255,255);
+  lcd.setRGB(245,120,66);
   //lcd.autoscroll();
 
 
@@ -84,7 +84,7 @@ void setup() {
   if (!mpu.begin()) {
     Serial.println("Failed to find MPU6050 chip");
     while (1) {
-      delay(10);
+      delay(30);
     }
   }
   mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
@@ -107,10 +107,11 @@ void setup() {
   myDFPlayer.volume(10);  //Set volume value. From 0 to 30
   delay(200);
   myDFPlayer.play(1);
+  delay(20);
   // delay(5000);
   // myDFPlayer.play(11);
   lcd.print("hello");
-  delay(8000);
+  delay(5000);
   lcd.clear();
   delay(200);
 
@@ -306,7 +307,7 @@ bool playGame(int twistAudio, int pushAudio, int shakeAudio){
   myDFPlayer.play(3); // does player pause code?????
 
   while (count <= 99){
-    lcd.print("SCORE: " + count);
+    
     int action = random(3);
     lcd.clear();
 
@@ -349,6 +350,9 @@ bool playGame(int twistAudio, int pushAudio, int shakeAudio){
 
     count++;
     myDFPlayer.play(2);
+    delay(10);
+    lcd.clear();
+    lcd.print("SCORE: " + (String)count);
     //maxTime = maxTime / 1.025;    // arbitrary value to speed up
     delay(500);                     // wait half a second in between giving commands
   }
