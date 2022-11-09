@@ -104,7 +104,7 @@ void setup() {
   }
   Serial.println(F("DFPlayer Mini online."));
   
-  myDFPlayer.volume(10);  //Set volume value. From 0 to 30
+  myDFPlayer.volume(25);  //Set volume value. From 0 to 30
   delay(200);
   myDFPlayer.play(1);
   delay(20);
@@ -279,7 +279,7 @@ bool verifyAccel(int maxTime){
 
     //lcd.print(a.acceleration.z);
     // check other action inputs, for false positives
-    if (abs(analogRead(SLIDER_PIN) - startPos) >= 20) return false;  
+    if (abs(analogRead(SLIDER_PIN) - startPos) >= 50) return false;  
     startPos = analogRead(SLIDER_PIN);
 
     //check encoder input
@@ -353,7 +353,7 @@ bool playGame(int twistAudio, int pushAudio, int shakeAudio){
     delay(10);
     lcd.clear();
     lcd.print("SCORE: " + (String)count);
-    //maxTime = maxTime / 1.025;    // arbitrary value to speed up
+    //maxTime = maxTime-0.06;    // arbitrary value to speed up
     delay(500);                     // wait half a second in between giving commands
   }
 
