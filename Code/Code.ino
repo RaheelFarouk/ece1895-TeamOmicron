@@ -205,6 +205,7 @@ bool verifySlider(int maxTime){
       return true;
     } else if(sliderPos >= 275){
       myDFPlayer.play(7);
+      delay(25);
     }
   }
 
@@ -241,6 +242,7 @@ bool verifyEncoder(int maxTime){
      if (digitalRead(ENCODER_B_PIN) != aEncoderState) { 
        counter ++;
        myDFPlayer.play(5);
+       delay(20);
       //  return true;
      } else {
        counter --;
@@ -305,6 +307,7 @@ bool playGame(int twistAudio, int pushAudio, int shakeAudio){
   int maxTime = maxStartTime;
 
   myDFPlayer.play(3); // does player pause code?????
+  delay(20);
 
   while (count <= 99){
     
@@ -321,6 +324,7 @@ bool playGame(int twistAudio, int pushAudio, int shakeAudio){
         if (!verifyEncoder(maxTime*1000)){
           return false;
         }
+        delay(150);
         lcd.clear();
       break;
 
@@ -333,6 +337,7 @@ bool playGame(int twistAudio, int pushAudio, int shakeAudio){
           lcd.clear();
           return false;
         }
+        delay(150);
         lcd.clear();
       break;
 
@@ -344,13 +349,14 @@ bool playGame(int twistAudio, int pushAudio, int shakeAudio){
           lcd.clear();
           return false;
         }
+        delay(150);
         lcd.clear();
       break;
     }
 
     count++;
     myDFPlayer.play(2);
-    delay(10);
+    delay(25);
     lcd.clear();
     lcd.print("SCORE: " + (String)count);
     //maxTime = maxTime-0.06;    // arbitrary value to speed up
@@ -379,6 +385,7 @@ void loser(){
   lcd.print("You Lose");
 
   myDFPlayer.play(4);
+  delay(20);
 
 
   // play loser sound
