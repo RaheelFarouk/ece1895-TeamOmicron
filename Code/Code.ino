@@ -104,16 +104,38 @@ void setup() {
   }
   Serial.println(F("DFPlayer Mini online."));
   
-  myDFPlayer.volume(25);  //Set volume value. From 0 to 30
+  myDFPlayer.volume(28);  //Set volume value. From 0 to 30
   delay(200);
   myDFPlayer.play(1);
   delay(20);
   // delay(5000);
   // myDFPlayer.play(11);
-  lcd.print("hello");
+  lcd.print("ToastMaster");
   delay(5000);
   lcd.clear();
   delay(200);
+
+  // myDFPlayer.play(1);
+  // delay(10000);
+  // myDFPlayer.play(2);
+  // delay(10000);
+  // myDFPlayer.play(3);
+  // delay(10000);
+  // myDFPlayer.play(4);
+  // delay(10000);
+  // myDFPlayer.play(5);
+  // delay(10000);
+  // myDFPlayer.play(6);
+  // delay(10000);
+  // myDFPlayer.play(7);
+  // delay(10000);
+  // myDFPlayer.play(8);
+  // delay(10000);
+  // myDFPlayer.play(9);
+  // delay(10000);
+  // myDFPlayer.play(10);
+  // delay(10000);
+  
 
   //get encoder last state
   aEncoderLastState = digitalRead(ENCODER_A_PIN);
@@ -178,6 +200,7 @@ void loop() {
 bool verifySlider(int maxTime){
   unsigned long startTime = millis();
   int startPos = analogRead(SLIDER_PIN);
+  int counter = 0;
 
   while (millis() - startTime < maxTime){
     // check other action inputs, for false positives
@@ -185,9 +208,14 @@ bool verifySlider(int maxTime){
     aEncoderState = digitalRead(ENCODER_A_PIN);
     if (aEncoderState != aEncoderLastState){     
      if (digitalRead(ENCODER_B_PIN) != aEncoderState) { 
-       return false;
+       counter ++;
      } else {
-       return false;
+       counter --;
+     }
+
+     if (abs(counter) >= 10){
+       return false; // Threshold for twist it command
+       lcd.clear();  
      }
     }
 
@@ -196,7 +224,7 @@ bool verifySlider(int maxTime){
     sensors_event_t a, g, temp;
     mpu.getEvent(&a, &g, &temp);
 
-    if((a.acceleration.z)<-18.0){ //-10.0 is the acceleration threshold
+    if((a.acceleration.z)<-25.0){ //-10.0 is the acceleration threshold
       return false;
     }
 
@@ -225,7 +253,7 @@ bool verifyEncoder(int maxTime){
   while(millis() - startTime < maxTime){
     // check other action inputs, for false positives
     
-    if (abs(analogRead(SLIDER_PIN) - startPos) >= 20) return false;  
+    if (abs(analogRead(SLIDER_PIN) - startPos) >= 200) return false;  
     startPos = analogRead(SLIDER_PIN);
 
     // verify no gyro
@@ -233,7 +261,7 @@ bool verifyEncoder(int maxTime){
     sensors_event_t a, g, temp;
     mpu.getEvent(&a, &g, &temp);
 
-    if((a.acceleration.z)<-18.0){ //-10.0 is the acceleration threshold
+    if((a.acceleration.z)<-25.0){ //-10.0 is the acceleration threshold
       return false;
     }
 
@@ -267,32 +295,43 @@ bool verifyAccel(int maxTime){
   int startPos = analogRead(SLIDER_PIN);
 
   while(millis() - startTime < maxTime){
-    /* Get new sensor events with the readings */
-    sensors_event_t a, g, temp;
-    mpu.getEvent(&a, &g, &temp);
-
-    if(abs((g.gyro.z+g.gyro.y+g.gyro.x)/3)>3){
-      if((a.acceleration.z)<-18.0){ //-10.0 is the acceleration threshold
-        delay(100);
-        lcd.clear();
-        return true;
-      }
-    }
-
+    
     //lcd.print(a.acceleration.z);
     // check other action inputs, for false positives
-    if (abs(analogRead(SLIDER_PIN) - startPos) >= 50) return false;  
+    if (abs(analogRead(SLIDER_PIN) - startPos) >= 200){
+      return false; 
+    }  
     startPos = analogRead(SLIDER_PIN);
 
     //check encoder input
     aEncoderState = digitalRead(ENCODER_A_PIN);
     if (aEncoderState != aEncoderLastState){     
       if (digitalRead(ENCODER_B_PIN) != aEncoderState) { 
-        return false;
+        counter ++;
       } else {
-        return false;
+        counter --;
+      }
+      //Serial.print(counter);
+      if (abs(counter) >= 15){
+        return false; // Threshold for twist it command
+        // lcd.print("Fail on encoder");
+        // delay(1000);
+        lcd.clear();  
+      } 
+    }
+
+    /* Get new sensor events with the readings */
+    sensors_event_t a, g, temp;
+    mpu.getEvent(&a, &g, &temp);
+
+    if(abs((g.gyro.z+g.gyro.y+g.gyro.x)/3)>3){
+      if((a.acceleration.z)<-18.0){ //-10.0 is the acceleration threshold
+        //delay(100);
+        lcd.clear();
+        return true;
       }
     }
+
   }
 
   return false;
@@ -308,6 +347,7 @@ bool playGame(int twistAudio, int pushAudio, int shakeAudio){
 
   myDFPlayer.play(3); // does player pause code?????
   delay(20);
+  delay(6000);
 
   while (count <= 99){
     
@@ -317,11 +357,12 @@ bool playGame(int twistAudio, int pushAudio, int shakeAudio){
     switch (action){
       case TWIST_IT:
         lcd.print("TWIST IT!");
-        myDFPlayer.play(twistAudio); //enter track number in brackets
+        myDFPlayer.play(9); //enter track number in brackets
         delay(50);       
 
         aEncoderLastState = digitalRead(ENCODER_A_PIN);
         if (!verifyEncoder(maxTime*1000)){
+          delay(150);
           return false;
         }
         delay(150);
@@ -330,10 +371,11 @@ bool playGame(int twistAudio, int pushAudio, int shakeAudio){
 
       case PUSH_IT:
         lcd.print("PUSH IT!");
-        myDFPlayer.play(pushAudio);
+        myDFPlayer.play(6);
         delay(50);
         
         if (!verifySlider(maxTime*1000)){
+          delay(150);
           lcd.clear();
           return false;
         }
@@ -343,18 +385,20 @@ bool playGame(int twistAudio, int pushAudio, int shakeAudio){
 
       case SHAKE_IT:
         lcd.print("SHAKE IT!");
-        myDFPlayer.play(shakeAudio);
+        myDFPlayer.play(8);
         delay(50);
         if (!verifyAccel(maxTime*1000)){
+          delay(150);
           lcd.clear();
           return false;
         }
-        delay(150);
+        delay(20);
         lcd.clear();
       break;
     }
 
     count++;
+    delay(30);
     myDFPlayer.play(2);
     delay(25);
     lcd.clear();
