@@ -1,0 +1,10 @@
+Board Information Report
+Filename     : C:\Users\14126\Documents\j design\ece1895-TeamOmicron\Altium Files\ToastMaster1895\MainBoard.PcbDoc
+Date         : 10/27/2022
+Time         : 6:57:32 PM
+Time Elapsed : 00:00:00
+
+General
+    Board Size, 2255milsx2075mils
+    Components on board, 20
+count : 2
