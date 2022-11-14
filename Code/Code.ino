@@ -35,7 +35,7 @@
 #define SoftwareSerialRX 8
 
 const int delayTime = 5;   // time between games of bop it after win or loss
-const int maxStartTime = 8;  // most time allowed for successful action
+const int maxStartTime = 8;  // most time allowed for successful action in seconds
 
 const int TWIST_IT = 0;
 const int PUSH_IT = 1;
@@ -44,8 +44,7 @@ const int SHAKE_IT = 2;
 int aEncoderState;
 int aEncoderLastState;
 int selector;
-
-bool firstPowerOn = true;
+int score;
 
 DFRobot_RGBLCD1602 lcd(16,2);  // set the LCD address to 0x27 for a 16 chars and 2 line display
 Adafruit_MPU6050 mpu;
@@ -58,7 +57,6 @@ void setup() {
 
   pinMode(GYRO_SCL_PIN, INPUT);
   pinMode(GYRO_SDA_PIN, INPUT);
-  //pinMode(ACEL_PIN, INPUT);
 
   pinMode(SLIDER_PIN, INPUT);
   pinMode(ENCODER_A_PIN, INPUT);
@@ -71,12 +69,9 @@ void setup() {
   pinMode(LCD_SCL_PIN, OUTPUT);
   pinMode(LCD_SDA_PIN, OUTPUT);
 
-  //pinMode(SPEAKER_PIN, OUTPUT);
-
   lcd.init();
   lcd.setBacklight(false);
   lcd.setRGB(245,120,66);
-  //lcd.autoscroll();
 
 
   //Setting up the Gyro?/Accel
@@ -108,9 +103,8 @@ void setup() {
   delay(200);
   myDFPlayer.play(1);
   delay(20);
-  // delay(5000);
-  // myDFPlayer.play(11);
-  lcd.print("hello");
+
+  lcd.print("Welcome to TOAST MASTER 1895");
   delay(5000);
   lcd.clear();
   delay(200);
@@ -122,11 +116,17 @@ void setup() {
 
 
 void loop() {
+  // Menu instructions for entering Mode
   lcd.print("Turn knob to");
   lcd.setCursor(0, 2);
   lcd.print("choose Mode");
-  delay(delayTime*1000);
+  delay(3*1000);
   lcd.clear();
+  lcd.print("To select Mode");
+  lcd.setCursor(0, 2);
+  lcd.print("push toast down");
+  delay(3*1000);
+
   int choice = menu();
 
   switch (choice){
@@ -136,6 +136,7 @@ void loop() {
       lcd.setCursor(0, 2);
       lcd.print("ACTIVATED");
       delay(2000);
+
       if(playGame(9, 6, 8)){
         winner();
       } else{
@@ -148,9 +149,16 @@ void loop() {
       lcd.print("CHAOS MODE ACTIVATED");
       delay(2000);
       lcd.clear();
-      lcd.print("Follow the written actions, NOT sound cues");
       delay(2000);
-      if(playGame(9, 6, 8)){
+
+      // all posible audio permutations, this is less neat that a shuffle array but with 
+      // ATMEGA chip limitations the randomizer should be better
+      int list[][3] = {{9, 6, 8}, {9, 8, 6},
+                      {6, 8, 9}, {6, 9, 8},
+                      {8, 9, 6}, {8, 6, 9}};
+
+      int audioCues = random(6);
+      if(playGame(list[audioCues][0], list[audioCues][1], list[audioCues][2])){
         winner();
       } else{
         loser();
@@ -160,11 +168,11 @@ void loop() {
     case 2:
       lcd.clear();
       lcd.print("TUTORIAL MODE ACTIVATED");
+      myDFPlayer.play(11);
       delay(2000);
       break;    
   }
 
-  firstPowerOn = false;
   delay(5000);
   lcd.clear();
 
@@ -241,18 +249,13 @@ bool verifyEncoder(int maxTime){
      if (digitalRead(ENCODER_B_PIN) != aEncoderState) { 
        counter ++;
        myDFPlayer.play(5);
-      //  return true;
      } else {
        counter --;
-      //  return true;
      }
-     //Serial.print(counter);
      if (abs(counter) >= 5){
        return true; // Threshold for twist it command
        lcd.clear();  
      } 
-
-     //lcd.print("passed counter");
    }    
   }
 
@@ -301,16 +304,19 @@ bool verifyAccel(int maxTime){
   @return true if player reaches 100 actions
 */
 bool playGame(int twistAudio, int pushAudio, int shakeAudio){
-  int count = 0;
+  score = 0;
   int maxTime = maxStartTime;
 
-  myDFPlayer.play(3); // does player pause code?????
+  myDFPlayer.play(3);
+  delay(6000);        //audio clip countdown is about 6 seconds long 
 
-  while (count <= 99){
+  // while loop to control the number of needed successful actions
+  while (score <= 99){
     
     int action = random(3);
     lcd.clear();
 
+    // switch case that gets a command number from random generator to verify the selected action
     switch (action){
       case TWIST_IT:
         lcd.print("TWIST IT!");
@@ -348,12 +354,12 @@ bool playGame(int twistAudio, int pushAudio, int shakeAudio){
       break;
     }
 
-    count++;
+    score++;
     myDFPlayer.play(2);
     delay(10);
     lcd.clear();
-    lcd.print("SCORE: " + (String)count);
-    //maxTime = maxTime-0.06;    // arbitrary value to speed up
+    lcd.print("SCORE: " + (String)score);
+    maxTime = maxTime-0.06;         // arbitrary value to speed up
     delay(500);                     // wait half a second in between giving commands
   }
 
@@ -361,30 +367,36 @@ bool playGame(int twistAudio, int pushAudio, int shakeAudio){
 }
 
 /**
-  Whatever happens when the player wins
+  Display message to player when player wins and 99 commands have been completed
 */
 void winner(){
 
   lcd.clear();
-  // play winner sound
   lcd.print("You Win");
+  delay(3000);
+  lcd.clear();
+  lcd.print("Toast Master");
+  lcd.setCursor(0, 2);
+  lcd.print("DEFEATED!!");
+  delay(3000);
 
 }
 
 /**
-  Whatever happens when the player loses
+  WDisplays message and final score and plays audio clip when the player fails to complete 99 command successfully 
 */
 void loser(){
   lcd.clear();
   lcd.print("You Lose");
-
+  lcd.setCursor(0, 2);
+  lcd.print("FINAL SCORE: " + (String)score);
   myDFPlayer.play(4);
-
-
-  // play loser sound
+  delay(1000);
 }
 
-
+/**
+  Encoder for menu needs to have more precision to reliably select game mode so this function helps with debouncing
+*/
 void menuEncoder() {
 	
 	// Read the current state of CLK
@@ -396,16 +408,10 @@ void menuEncoder() {
 		// the encoder is rotating CCW so decrement
 		if (digitalRead(ENCODER_B_PIN) != aEncoderState) {
 			selector --;
-			//currentDir ="CCW";
 		} else {
 			// Encoder is rotating CW so increment
 			selector ++;
-			//currentDir ="CW";
 		}
-		//Serial.print("Direction: ");
-		//Serial.print(currentDir);
-		Serial.print(" | Counter: ");
-		Serial.println(selector);
 	}
 	// Remember last CLK state
 	aEncoderLastState = aEncoderState;
@@ -421,21 +427,19 @@ int menu(){
   selector = 0;
   char *menuOptions[] = {"Play Game", "CHAOS Mode", "Tutorial"};
   
-  //lcd.print(menuOptions[selector]);
-
   int startPos = analogRead(SLIDER_PIN);
   int oldValue;
 
-  //while ((abs(analogRead(SLIDER_PIN) - startPos) < 500)){
   while (analogRead(SLIDER_PIN) < 500){
 
     menuEncoder();
     
-     if (selector < 0){
-       selector = 2;
-     } else if (selector > 2){
-       selector = 0;
-     }
+    // if statements for making wrap around menu, user can never go out of bounds for the menu
+    if (selector < 0){
+      selector = 2;
+    } else if (selector > 2){
+      selector = 0;
+    }
     
     if(selector != oldValue){
       lcd.clear();
